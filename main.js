@@ -1,9 +1,23 @@
 import { loadRawAssets } from "/libs/pak/pak-loader.js";
 import { u8 } from "/libs/binary/little-endian.js";
+import MDLHeader from "/libs/mdl/mdl-header.js";
+import MDLSkin from "/libs/mdl/mdl-skin.js";
 
 // Add support for loading external "loose" assets *eventually*
 const rawAssets = await loadRawAssets("/assets/id1");
 console.log(rawAssets);
+
+const playerMDL = rawAssets.find(asset => asset.name === "player" && asset.type === "mdl");
+
+const playerMDLHeader = MDLHeader.single(playerMDL.view, 0);
+const playerMDLTexture = MDLSkin.single(playerMDL.view, MDLHeader.BYTES_PER_ELEMENT, playerMDLHeader.skinwidth * playerMDLHeader.skinheight);
+
+console.log(playerMDLHeader);
+console.log(playerMDLTexture);
+
+
+const DEFAULT_BRIGHTNESS = 31;
+
 
 const paletteEntry = rawAssets.find(asset => asset.type === "palette");
 const palette = u8.vector(paletteEntry.view, 0, paletteEntry.view.byteLength);
@@ -48,7 +62,31 @@ const drawColormap = (page) => {
   }
 };
 
-const DEFAULT_BRIGHTNESS = 31;
+
+
+const playerCanvas = document.createElement("canvas");
+const playerContext = playerCanvas.getContext("2d");
+
+playerCanvas.width = playerMDLHeader.skinwidth;
+playerCanvas.height = playerMDLHeader.skinheight;
+
+const drawSkinCanvas = (page) => {
+  const { width, height } = playerCanvas;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const pixelIndex = playerMDLTexture.data[y * width + x];
+      const colorIndex = colormap[pixelIndex + 256 * page] * 3;
+      const r = palette[colorIndex + 0];
+      const g = palette[colorIndex + 1];
+      const b = palette[colorIndex + 2];
+
+      playerContext.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      playerContext.fillRect(x, y, 1, 1);
+    }
+  }
+}
+
 
 const brightness = document.createElement("input");
 const brightnessReset = document.createElement("button");
@@ -58,15 +96,24 @@ brightness.step = 1;
 brightness.min = 0;
 brightness.max = 63;
 brightness.value = 31;
-brightness.oninput = () => drawColormap(brightness.valueAsNumber);
+brightness.oninput = () => {
+  const value = brightness.valueAsNumber;
+  drawColormap(value);
+  drawSkinCanvas(value);
+};
 
 brightnessReset.textContent = "reset";
 brightnessReset.onclick = () => {
   brightness.value = DEFAULT_BRIGHTNESS;
-  drawColormap(brightness.valueAsNumber);
+  const value = brightness.value;
+  drawColormap(value);
+  drawSkinCanvas(value);
 };
+
 drawColormap(brightness.valueAsNumber);
-document.body.append(paletteCanvas, colormapCanvas, brightness, brightnessReset);
+drawSkinCanvas(brightness.valueAsNumber);
+
+document.body.append(paletteCanvas, colormapCanvas, brightness, brightnessReset, playerCanvas);
 
 /*
   Layout

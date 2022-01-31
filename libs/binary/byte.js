@@ -19,6 +19,6 @@ export const byteReader = (ArrayType, endianness = LITTLE_ENDIAN) => {
   return {
     single,
     vector,
-    byteSize: ArrayType.BYTES_PER_ELEMENT
+    BYTES_PER_ELEMENT: ArrayType.BYTES_PER_ELEMENT
   };
 };

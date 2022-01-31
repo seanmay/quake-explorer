@@ -1,9 +1,7 @@
 export const Struct = (fields) => {
-  const byteSize = fields
-    .map(([, type, count]) => type.byteSize * count)
+  const BYTES_PER_ELEMENT = fields
+    .map(([, type, count]) => type.BYTES_PER_ELEMENT * count)
     .reduce((a, b) => a + b, 0);
-
-  console.log(fields, byteSize);
 
   const single = (view, initialOffset) => {
     let offset = 0;
@@ -15,17 +13,17 @@ export const Struct = (fields) => {
         : type.vector(view, currentOffset, count);
       
       struct[name] = value;
-      offset += type.byteSize * count;
+      offset += type.BYTES_PER_ELEMENT * count;
     }
 
-    struct.byteLength = byteSize;
+    struct.byteLength = BYTES_PER_ELEMENT;
     return struct;
   };
 
   const vector = (view, initialOffset, count) => {
     let array = new Array(count);
     for (let i = 0; i < count; i += 1) {
-      const currentOffset = initialOffset + i * byteSize;
+      const currentOffset = initialOffset + i * BYTES_PER_ELEMENT;
       const value = single(view, currentOffset);
       array[i] = value;
     }
@@ -35,6 +33,6 @@ export const Struct = (fields) => {
   return {
     single,
     vector,
-    byteSize,
+    BYTES_PER_ELEMENT,
   };
 };

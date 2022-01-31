@@ -20,6 +20,6 @@ const readString = (view, offset, count) => {
 export const string = {
   single: readChar,
   vector: readString,
-  byteSize: Uint8Array.BYTES_PER_ELEMENT,
+  BYTES_PER_ELEMENT: Uint8Array.BYTES_PER_ELEMENT,
 };
 

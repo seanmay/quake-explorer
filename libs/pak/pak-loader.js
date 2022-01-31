@@ -50,7 +50,7 @@ export const loadRawAssets = async (path) => {
 
   const glossaries = views.map(view => {
     const header = PakHeader.single(view, 0);
-    const entryCount = header.size / PakEntry.byteSize;
+    const entryCount = header.size / PakEntry.BYTES_PER_ELEMENT;
     const glossary = PakEntry.vector(view, header.offset, entryCount);
     return glossary;
   });
