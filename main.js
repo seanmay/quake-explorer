@@ -7,13 +7,20 @@ import MDLSkin from "/libs/mdl/mdl-skin.js";
 const rawAssets = await loadRawAssets("/assets/id1");
 console.log(rawAssets);
 
-const playerMDL = rawAssets.find(asset => asset.name === "player" && asset.type === "mdl");
+const rawModels = rawAssets.filter(asset => asset.type === "mdl");
 
-const playerMDLHeader = MDLHeader.single(playerMDL.view, 0);
-const playerMDLTexture = MDLSkin.single(playerMDL.view, MDLHeader.BYTES_PER_ELEMENT, playerMDLHeader.skinwidth * playerMDLHeader.skinheight);
+let selectedModelName;
+let selectedSkinIndex;
+let selectedModel;
 
-console.log(playerMDLHeader);
-console.log(playerMDLTexture);
+const fetchMDLByName = (mdls, name) => mdls.find(mdl => mdl.name === name);
+const parseMDLTexture = (mdl) => {
+  const header = MDLHeader.single(mdl.view, 0);
+  const { skinwidth, skinheight } = header;
+  const texture = MDLSkin.vector(mdl.view, MDLHeader.BYTES_PER_ELEMENT, header.skincount, skinwidth * skinheight);
+  
+  return { header, texture };
+};
 
 
 const DEFAULT_BRIGHTNESS = 31;
@@ -67,15 +74,22 @@ const drawColormap = (page) => {
 const textureCanvas = document.createElement("canvas");
 const textureContext = textureCanvas.getContext("2d");
 
-textureCanvas.width = playerMDLHeader.skinwidth;
-textureCanvas.height = playerMDLHeader.skinheight;
+textureCanvas.width;
+textureCanvas.height;
 
 const drawTextureCanvas = (page) => {
-  const { width, height } = textureCanvas;
+  const { skinwidth: width, skinheight: height } = selectedModel.header;
+  textureCanvas.width = width;
+  textureCanvas.height = height;
+  console.log(selectedModel);
+  console.log(selectedSkinIndex);
+
+  const texture = selectedModel.texture[selectedSkinIndex];
+  console.log(texture);
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const pixelIndex = playerMDLTexture.data[y * width + x];
+      const pixelIndex = texture.data[y * width + x];
       const colorIndex = colormap[pixelIndex + 256 * page] * 3;
       const r = palette[colorIndex + 0];
       const g = palette[colorIndex + 1];
@@ -99,7 +113,7 @@ brightness.value = 31;
 brightness.oninput = () => {
   const value = brightness.valueAsNumber;
   drawColormap(value);
-  drawSkinCanvas(value);
+  drawTextureCanvas(value);
 };
 
 brightnessReset.textContent = "reset";
@@ -107,13 +121,54 @@ brightnessReset.onclick = () => {
   brightness.value = DEFAULT_BRIGHTNESS;
   const value = brightness.value;
   drawColormap(value);
-  drawSkinCanvas(value);
+  drawTextureCanvas(value);
 };
+
+
+const modelSelector = document.createElement("select");
+rawModels.forEach(mdl => {
+  const name = mdl.name;
+  const option = document.createElement("option");
+  option.value = name;
+  option.textContent = name;
+  modelSelector.append(option);
+});
+
+modelSelector.oninput = e => {
+  selectedModelName = e.target.value;
+  selectedModel = parseMDLTexture(fetchMDLByName(rawModels, selectedModelName));
+  selectedSkinIndex = 0;
+  buildSkinList();
+  drawTextureCanvas(brightness.valueAsNumber);
+};
+
+const buildSkinList = () => {
+  const count = selectedModel.header.skincount;
+  skinSelector.replaceChildren();
+
+  Array(count).fill().forEach((_, i) => {
+    const option = document.createElement("option");
+    option.value = `${i}`;
+    option.textContent = `${i}`;
+    skinSelector.append(option);
+  });
+};
+
+const skinSelector = document.createElement("select");
+skinSelector.oninput = (e) => {
+  selectedSkinIndex = Number(e.target.value);
+  drawTextureCanvas(brightness.valueAsNumber);
+};
+
+selectedModelName = rawModels[0].name;
+selectedSkinIndex = 0;
+selectedModel = parseMDLTexture(rawModels[0]);
+buildSkinList();
 
 drawColormap(brightness.valueAsNumber);
 drawTextureCanvas(brightness.valueAsNumber);
 
-document.body.append(paletteCanvas, colormapCanvas, brightness, brightnessReset, textureCanvas);
+document.body.append(paletteCanvas, colormapCanvas, brightness, brightnessReset, modelSelector, skinSelector, textureCanvas);
 
 /*
   Layout
