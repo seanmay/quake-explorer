@@ -5,8 +5,6 @@ import MDLSkin from "/libs/mdl/mdl-skin.js";
 
 // Add support for loading external "loose" assets *eventually*
 const rawAssets = await loadRawAssets("/assets/id1");
-console.log(rawAssets);
-
 const rawModels = rawAssets.filter(asset => asset.type === "mdl");
 
 let selectedModelName;
@@ -81,11 +79,8 @@ const drawTextureCanvas = (page) => {
   const { skinwidth: width, skinheight: height } = selectedModel.header;
   textureCanvas.width = width;
   textureCanvas.height = height;
-  console.log(selectedModel);
-  console.log(selectedSkinIndex);
 
   const texture = selectedModel.texture[selectedSkinIndex];
-  console.log(texture);
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
