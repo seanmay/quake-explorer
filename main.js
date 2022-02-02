@@ -64,14 +64,14 @@ const drawColormap = (page) => {
 
 
 
-const playerCanvas = document.createElement("canvas");
-const playerContext = playerCanvas.getContext("2d");
+const textureCanvas = document.createElement("canvas");
+const textureContext = textureCanvas.getContext("2d");
 
-playerCanvas.width = playerMDLHeader.skinwidth;
-playerCanvas.height = playerMDLHeader.skinheight;
+textureCanvas.width = playerMDLHeader.skinwidth;
+textureCanvas.height = playerMDLHeader.skinheight;
 
-const drawSkinCanvas = (page) => {
-  const { width, height } = playerCanvas;
+const drawTextureCanvas = (page) => {
+  const { width, height } = textureCanvas;
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
@@ -81,8 +81,8 @@ const drawSkinCanvas = (page) => {
       const g = palette[colorIndex + 1];
       const b = palette[colorIndex + 2];
 
-      playerContext.fillStyle = `rgb(${r}, ${g}, ${b})`;
-      playerContext.fillRect(x, y, 1, 1);
+      textureContext.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      textureContext.fillRect(x, y, 1, 1);
     }
   }
 }
@@ -111,9 +111,9 @@ brightnessReset.onclick = () => {
 };
 
 drawColormap(brightness.valueAsNumber);
-drawSkinCanvas(brightness.valueAsNumber);
+drawTextureCanvas(brightness.valueAsNumber);
 
-document.body.append(paletteCanvas, colormapCanvas, brightness, brightnessReset, playerCanvas);
+document.body.append(paletteCanvas, colormapCanvas, brightness, brightnessReset, textureCanvas);
 
 /*
   Layout
